@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FaceAsk – Emotion Detection</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f0f1a;
+      --card:     #161625;
+      --card2:    #1e1e35;
+      --border:   #2a2a3d;
+      --accent:   #7c3aed;
+      --accent-l: #a78bfa;
+      --text:     #e2e8f0;
+      --muted:    #94a3b8;
+      --danger:   #ef4444;
+      --success:  #10b981;
+    }
+
+    body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; min-height: 100vh; }
+
+    /* ══ NAV ══ */
+    .nav { display: flex; justify-content: space-between; align-items: center; padding: 14px 32px; background: var(--card); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-brand { font-size: 1.3rem; font-weight: 800; color: var(--accent-l); letter-spacing: .5px; }
+    .nav-links a { color: var(--muted); text-decoration: none; margin-left: 22px; font-size: .93rem; transition: color .2s; }
+    .nav-links a:hover, .nav-links a.active { color: var(--accent-l); }
+
+    /* ══ AUTH PAGES ══ */
+    .auth-wrap { display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 24px; }
+    .auth-card { background: var(--card); border: 1px solid var(--border); border-radius: 18px; padding: 40px 36px; width: 100%; max-width: 420px; box-shadow: 0 8px 40px rgba(0,0,0,.5); }
+    .auth-card .logo { text-align: center; font-size: 2.6rem; margin-bottom: 6px; }
+    .auth-card h1 { text-align: center; font-size: 1.6rem; color: var(--accent-l); margin-bottom: 4px; }
+    .auth-card .tagline { text-align: center; color: var(--muted); font-size: .88rem; margin-bottom: 28px; }
+
+    .form-group { margin-bottom: 16px; }
+    .form-group label { display: block; font-size: .85rem; color: var(--muted); margin-bottom: 6px; }
+    .form-group input { width: 100%; padding: 11px 14px; background: var(--card2); border: 1px solid var(--border); border-radius: 9px; color: var(--text); font-size: .95rem; outline: none; transition: border-color .2s; }
+    .form-group input:focus { border-color: var(--accent); }
+
+    .btn-primary { width: 100%; padding: 13px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .2s; margin-top: 6px; }
+    .btn-primary:hover { background: #6d28d9; }
+
+    .auth-switch { text-align: center; margin-top: 20px; font-size: .88rem; color: var(--muted); }
+    .auth-switch a { color: var(--accent-l); text-decoration: none; font-weight: 600; }
+    .auth-switch a:hover { text-decoration: underline; }
+
+    .alert { padding: 10px 14px; border-radius: 8px; font-size: .88rem; margin-bottom: 16px; }
+    .alert-error   { background: #2d1b1b; border: 1px solid #7f1d1d; color: #fca5a5; }
+    .alert-success { background: #052e16; border: 1px solid #14532d; color: #86efac; }
+
+    /* ══ DASHBOARD ══ */
+    .dash-wrap { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; flex-wrap: wrap; gap: 12px; }
+    .dash-header h2 { font-size: 1.4rem; color: var(--accent-l); }
+    .dash-tabs { display: flex; gap: 12px; }
+    .tab-btn { padding: 9px 22px; border-radius: 30px; border: 2px solid var(--border); background: transparent; color: var(--muted); cursor: pointer; font-size: .9rem; font-weight: 600; transition: all .2s; }
+    .tab-btn:hover { border-color: var(--accent-l); color: var(--accent-l); }
+    .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Live cam panel */
+    .live-panel { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    @media (max-width: 720px) { .live-panel { grid-template-columns: 1fr; } }
+
+    .video-card { background: var(--card); border-radius: 16px; overflow: hidden; border: 1px solid var(--border); }
+    .video-card img { width: 100%; display: block; }
+    .video-card .vid-footer { padding: 12px 16px; display: flex; align-items: center; gap: 10px; }
+    .live-dot { width: 10px; height: 10px; background: #ef4444; border-radius: 50%; animation: pulse 1.2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    .emotion-panel { background: var(--card); border-radius: 16px; padding: 24px; border: 1px solid var(--border); display: flex; flex-direction: column; gap: 16px; }
+    .emo-display { text-align: center; }
+    .emo-emoji { font-size: 3.5rem; }
+    .emo-label { font-size: 1.5rem; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-top: 6px; }
+    .emo-msg   { font-size: .9rem; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+
+    .activities h4 { font-size: .9rem; color: var(--accent-l); margin-bottom: 10px; }
+    .activities ul  { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .activities li  { background: var(--card2); border-radius: 8px; padding: 8px 12px; font-size: .85rem; color: var(--text); }
+
+    .therapist-banner { background: #1c1a2e; border-left: 4px solid var(--accent); border-radius: 8px; padding: 10px 14px; font-size: .85rem; color: #c4b5fd; display: none; }
+
+    /* ══ UPLOAD PANEL ══ */
+    .upload-panel { display: none; }
+    .upload-panel.visible { display: block; }
+    .live-panel.hidden { display: none; }
+
+    .upload-card { background: var(--card); border-radius: 16px; padding: 32px; border: 1px solid var(--border); max-width: 700px; margin: 0 auto; }
+    .upload-card h3 { font-size: 1.3rem; color: var(--accent-l); margin-bottom: 6px; }
+    .upload-card .subtitle { color: var(--muted); font-size: .9rem; margin-bottom: 24px; }
+
+    .drop-zone { display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed var(--border); border-radius: 14px; padding: 40px 24px; cursor: pointer; transition: all .2s; text-align: center; }
+    .drop-zone:hover, .drop-zone.drag-over { border-color: var(--accent-l); background: var(--card2); }
+    .dz-icon { font-size: 2.8rem; margin-bottom: 12px; }
+    .dz-main { font-size: .95rem; color: var(--text); }
+    .dz-link { color: var(--accent-l); text-decoration: underline; }
+    .dz-hint { font-size: .8rem; color: #555; margin-top: 8px; }
+
+    .preview-wrap { margin-top: 16px; text-align: center; }
+    .preview-wrap img { max-width: 100%; max-height: 220px; border-radius: 10px; border: 2px solid var(--border); }
+    .pdf-chip { display: inline-flex; align-items: center; gap: 8px; background: var(--card2); border: 1px solid var(--border); border-radius: 30px; padding: 8px 18px; font-size: .88rem; color: var(--muted); margin-top: 10px; }
+
+    .btn-analyse { width: 100%; padding: 14px; background: var(--accent); color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: background .2s; margin-top: 20px; }
+    .btn-analyse:hover:not(:disabled) { background: #6d28d9; }
+    .btn-analyse:disabled { background: #2a2a4a; color: #555; cursor: not-allowed; }
+
+    .spinner-wrap { text-align: center; padding: 20px 0; display: none; }
+    .spinner { width: 44px; height: 44px; border: 4px solid var(--border); border-top-color: var(--accent-l); border-radius: 50%; animation: spin .8s linear infinite; margin: 0 auto 10px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner-wrap p { color: var(--muted); font-size: .88rem; }
+
+    .error-box { background: #2d1b1b; border: 1px solid #7f1d1d; color: #fca5a5; border-radius: 8px; padding: 12px 16px; font-size: .9rem; margin-top: 14px; display: none; }
+
+    /* Result */
+    .result-section { margin-top: 28px; display: none; }
+    .result-badge { text-align: center; font-size: 2rem; font-weight: 800; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 4px; }
+    .result-msg { text-align: center; color: var(--muted); font-size: .95rem; margin-bottom: 20px; }
+
+    .annotated-grid { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; margin-bottom: 20px; }
+    .annotated-grid figure { margin: 0; text-align: center; }
+    .annotated-grid img { max-width: 300px; max-height: 220px; border-radius: 10px; border: 2px solid var(--border); display: block; }
+    .annotated-grid figcaption { font-size: .78rem; color: var(--muted); margin-top: 6px; }
+
+    .bar-section h4, .act-section h4 { font-size: .9rem; color: var(--accent-l); margin-bottom: 12px; }
+    .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; font-size: .85rem; }
+    .bar-lbl  { width: 80px; color: var(--muted); text-transform: capitalize; }
+    .bar-track { flex: 1; background: var(--card2); border-radius: 6px; height: 13px; overflow: hidden; }
+    .bar-fill  { height: 100%; border-radius: 6px; width: 0; transition: width .7s ease; }
+    .bar-pct   { width: 44px; text-align: right; color: #555; font-size: .8rem; }
+
+    .act-section { margin: 18px 0; }
+    .act-section ul { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+    .act-section li { background: var(--card2); border-radius: 8px; padding: 9px 14px; font-size: .88rem; }
+
+    .therapist-strip { background: #1c1a2e; border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 16px; color: #c4b5fd; font-size: .88rem; display: none; }
+
+    /* History */
+    .history-card { background: var(--card); border-radius: 16px; padding: 24px; border: 1px solid var(--border); max-width: 700px; margin: 24px auto 0; }
+    .history-card h4 { color: var(--accent-l); font-size: 1rem; margin-bottom: 16px; }
+    .history-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+    .history-table th { color: #555; font-weight: 600; padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    .history-table td { padding: 9px 10px; border-bottom: 1px solid #1a1a2e; color: var(--muted); }
+    .emo-pill { display: inline-block; padding: 2px 12px; border-radius: 20px; font-size: .78rem; font-weight: 600; }
+    .ep-happy    { background: #064e3b; color: #6ee7b7; }
+    .ep-sad      { background: #1e3a5f; color: #93c5fd; }
+    .ep-angry    { background: #450a0a; color: #fca5a5; }
+    .ep-fear     { background: #3b0764; color: #d8b4fe; }
+    .ep-surprise { background: #0c4a6e; color: #7dd3fc; }
+    .ep-disgust  { background: #14532d; color: #86efac; }
+    .ep-neutral  { background: #374151; color: #d1d5db; }
+    .ep-no_face  { background: #292524; color: #a8a29e; }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════ LOGIN ══════════════════ -->
+{% if page == "login" %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo">😊</div>
+    <h1>FaceAsk</h1>
+    <p class="tagline">AI-Powered Emotion Detection</p>
+
+    {% if error %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+
+    <form method="POST" action="{{ url_for('login') }}">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter your username" required autofocus/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="Enter your password" required/>
+      </div>
+      <button type="submit" class="btn-primary">🔐 Login</button>
+    </form>
+    <p class="auth-switch">Don't have an account? <a href="{{ url_for('signup') }}">Sign up</a></p>
+  </div>
+</div>
+
+<!-- ══════════════════ SIGNUP ══════════════════ -->
+{% elif page == "signup" %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <div class="logo">🆕</div>
+    <h1>Create Account</h1>
+    <p class="tagline">Join FaceAsk today</p>
+
+    {% if error   %}<div class="alert alert-error">{{ error }}</div>{% endif %}
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+
+    <form method="POST" action="{{ url_for('signup') }}">
+      <div class="form-group">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Choose a username" required autofocus/>
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" name="password" placeholder="At least 4 characters" required/>
+      </div>
+      <div class="form-group">
+        <label>Confirm Password</label>
+        <input type="password" name="confirm" placeholder="Repeat your password" required/>
+      </div>
+      <button type="submit" class="btn-primary">🚀 Create Account</button>
+    </form>
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+  </div>
+</div>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+{% elif page == "dashboard" %}
+<nav class="nav">
+  <span class="nav-brand">😊 FaceAsk</span>
+  <div class="nav-links">
+    <span style="color:var(--muted);font-size:.88rem;">👤 {{ username }}</span>
+    <a href="{{ url_for('logout') }}">🚪 Logout</a>
+  </div>
+</nav>
+
+<div class="dash-wrap">
+  <div class="dash-header">
+    <h2>Welcome back, {{ username }} 👋</h2>
+    <div class="dash-tabs">
+      <button class="tab-btn"        id="tab-live"   onclick="switchTab('live')">📹 Live Camera</button>
+      <button class="tab-btn active" id="tab-upload" onclick="switchTab('upload')">📁 Upload File</button>
+    </div>
+  </div>
+
+  <!-- ── LIVE CAMERA TAB ── -->
+  <div class="live-panel" id="live-panel">
+    <div class="video-card">
+      <img id="video-feed-img" src="" alt="Live camera feed"/>
+      <div class="vid-footer">
+        <div class="live-dot"></div>
+        <span style="font-size:.85rem;color:var(--muted);">Live camera — emotion detected in real time</span>
+      </div>
+    </div>
+
+    <div class="emotion-panel">
+      <div class="emo-display">
+        <div class="emo-emoji" id="live-emoji">😐</div>
+        <div class="emo-label" id="live-label">NEUTRAL</div>
+        <div class="emo-msg"   id="live-msg">Detecting your emotion…</div>
+      </div>
+      <div class="activities">
+        <h4>💡 Suggested Activities</h4>
+        <ul id="live-activities"></ul>
+      </div>
+      <div class="therapist-banner" id="live-therapist">
+        🩺 <strong>Tip:</strong> Consider speaking to a mental health professional for extra support.
+      </div>
+    </div>
+  </div>
+
+  <!-- ── UPLOAD TAB ── -->
+  <div class="upload-panel" id="upload-panel">
+    <div class="upload-card">
+      <h3>📂 Upload for Emotion Detection</h3>
+      <p class="subtitle">Upload an <strong>image</strong> (JPG, PNG, WebP…) or a <strong>PDF</strong> with faces — we'll detect the emotion instantly.</p>
+
+      <label id="drop-zone" class="drop-zone" for="file-input">
+        <div class="dz-icon">🖼️</div>
+        <p class="dz-main" id="dz-text">Drag &amp; drop a file here, or <span class="dz-link">browse</span></p>
+        <p class="dz-hint">Supported: JPG · PNG · WEBP · BMP · PDF &nbsp;|&nbsp; Max 10 MB</p>
+        <input type="file" id="file-input" accept=".jpg,.jpeg,.png,.webp,.bmp,.pdf" style="display:none"/>
+      </label>
+
+      <div class="preview-wrap" id="preview-wrap" style="display:none">
+        <img id="img-preview" src="" alt="preview" style="display:none"/>
+        <div class="pdf-chip" id="pdf-chip" style="display:none">📄 <span id="pdf-name"></span></div>
+      </div>
+
+      <button class="btn-analyse" id="analyse-btn" disabled>🔍 Analyse Emotion</button>
+
+      <div class="spinner-wrap" id="spinner-wrap">
+        <div class="spinner"></div>
+        <p>Analysing… this may take a few seconds</p>
+      </div>
+
+      <div class="error-box" id="error-box"></div>
+
+      <!-- Result -->
+      <div class="result-section" id="result-section">
+        <div class="result-badge" id="result-badge"></div>
+        <div class="result-msg"   id="result-msg"></div>
+
+        <div class="annotated-grid" id="annotated-grid"></div>
+
+        <div class="bar-section" id="bar-section"></div>
+
+        <div class="act-section">
+          <h4>💡 Suggested Activities</h4>
+          <ul id="result-activities"></ul>
+        </div>
+
+        <div class="therapist-strip" id="result-therapist">
+          🩺 <strong>Tip:</strong> Consider speaking to a mental health professional for extra support.
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload history (loaded via JS) -->
+    <div class="history-card" id="history-card" style="display:none">
+      <h4>🕑 Your Recent Uploads</h4>
+      <table class="history-table">
+        <thead><tr><th>File</th><th>Type</th><th>Emotion</th><th>When</th></tr></thead>
+        <tbody id="history-tbody"></tbody>
+      </table>
+    </div>
+  </div><!-- /upload-panel -->
+</div><!-- /dash-wrap -->
+
+<!-- ══ Scripts ══ -->
+<script>
+/* ────────────────────────────────────
+   Constants
+──────────────────────────────────── */
+const EMOJI = { happy:'😄', sad:'😢', angry:'😠', fear:'😨', surprise:'😲', disgust:'🤢', neutral:'😐', no_face:'🚫' };
+const COLOR = {
+  happy:'#10b981', sad:'#3b82f6', angry:'#ef4444',
+  fear:'#8b5cf6', surprise:'#06b6d4', disgust:'#22c55e',
+  neutral:'#9ca3af', no_face:'#6b7280'
+};
+
+/* ────────────────────────────────────
+   Tab switcher  — lazy camera load
+──────────────────────────────────── */
+const VIDEO_SRC = "{{ url_for('video_feed') }}";
+let   activeTab = 'live';
+let   pollTimer = null;
+
+function startCamera() {
+  const img = document.getElementById('video-feed-img');
+  if (!img.src || img.src === window.location.href) {   // not yet loaded
+    img.src = VIDEO_SRC;
+  }
+}
+
+function stopCamera() {
+  const img = document.getElementById('video-feed-img');
+  img.src = '';   // kills the MJPEG connection immediately
+}
+
+function startPolling() {
+  if (pollTimer) return;
+  pollTimer = setInterval(pollEmotion, 2000);
+  pollEmotion();   // immediate first hit
+}
+
+function stopPolling() {
+  clearInterval(pollTimer);
+  pollTimer = null;
+}
+
+async function pollEmotion() {
+  try {
+    const r = await fetch('/emotion_data');
+    const d = await r.json();
+    const emo = d.emotion || 'neutral';
+    document.getElementById('live-emoji').textContent = EMOJI[emo] || '😐';
+    document.getElementById('live-label').textContent = emo.toUpperCase();
+    document.getElementById('live-label').style.color = COLOR[emo] || '#a78bfa';
+    document.getElementById('live-msg').textContent   = d.message || '';
+    const ul = document.getElementById('live-activities');
+    ul.innerHTML = '';
+    (d.activities || []).forEach(a => { const li = document.createElement('li'); li.textContent = a; ul.appendChild(li); });
+    document.getElementById('live-therapist').style.display = d.therapist ? 'block' : 'none';
+  } catch(e) {}
+}
+
+function switchTab(tab) {
+  activeTab = tab;
+  const livePanel   = document.getElementById('live-panel');
+  const uploadPanel = document.getElementById('upload-panel');
+
+  if (tab === 'live') {
+    livePanel.style.display   = '';
+    uploadPanel.style.display = 'none';
+    document.getElementById('tab-live').classList.add('active');
+    document.getElementById('tab-upload').classList.remove('active');
+    startCamera();
+    startPolling();
+  } else {
+    livePanel.style.display   = 'none';
+    uploadPanel.style.display = 'block';
+    document.getElementById('tab-live').classList.remove('active');
+    document.getElementById('tab-upload').classList.add('active');
+    stopCamera();
+    stopPolling();
+    loadHistory();
+  }
+}
+
+// Page starts on Upload tab so camera never auto-starts
+window.addEventListener('DOMContentLoaded', () => switchTab('upload'));
+
+/* ────────────────────────────────────
+   Upload feature
+──────────────────────────────────── */
+const dropZone   = document.getElementById('drop-zone');
+const fileInput  = document.getElementById('file-input');
+const dzText     = document.getElementById('dz-text');
+const analyseBtn = document.getElementById('analyse-btn');
+let selectedFile = null;
+
+// Drag & drop
+['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.add('drag-over'); }));
+['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => { ev.preventDefault(); dropZone.classList.remove('drag-over'); }));
+dropZone.addEventListener('drop', ev => handleFile(ev.dataTransfer.files[0]));
+fileInput.addEventListener('change', () => handleFile(fileInput.files[0]));
+
+function handleFile(file) {
+  if (!file) return;
+  selectedFile = file;
+  analyseBtn.disabled = false;
+  clearResult();
+
+  const previewWrap = document.getElementById('preview-wrap');
+  const imgPreview  = document.getElementById('img-preview');
+  const pdfChip     = document.getElementById('pdf-chip');
+
+  dzText.innerHTML = '✅ <strong>' + file.name + '</strong>';
+  previewWrap.style.display = 'block';
+
+  if (file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = e => { imgPreview.src = e.target.result; imgPreview.style.display = 'block'; };
+    reader.readAsDataURL(file);
+    pdfChip.style.display = 'none';
+  } else {
+    imgPreview.style.display = 'none';
+    document.getElementById('pdf-name').textContent = file.name;
+    pdfChip.style.display = 'inline-flex';
+  }
+}
+
+analyseBtn.addEventListener('click', async () => {
+  if (!selectedFile) return;
+  clearResult();
+  document.getElementById('spinner-wrap').style.display = 'block';
+  document.getElementById('error-box').style.display    = 'none';
+  analyseBtn.disabled = true;
+
+  const fd = new FormData();
+  fd.append('file', selectedFile);
+
+  try {
+    const resp = await fetch('/api/upload_emotion', { method: 'POST', body: fd });
+    const data = await resp.json();
+
+    if (!resp.ok || data.error) { showError(data.error || 'Unknown error'); return; }
+    renderResult(data);
+  } catch(err) {
+    showError('Network error: ' + err.message);
+  } finally {
+    document.getElementById('spinner-wrap').style.display = 'none';
+    analyseBtn.disabled = false;
+  }
+});
+
+function renderResult(data) {
+  const emo = data.emotion || 'neutral';
+  document.getElementById('result-section').style.display = 'block';
+
+  // Badge
+  const badge = document.getElementById('result-badge');
+  badge.textContent = (EMOJI[emo] || '🙂') + '  ' + emo.toUpperCase();
+  badge.style.color = COLOR[emo] || '#a78bfa';
+  document.getElementById('result-msg').textContent = data.message || '';
+
+  // Annotated image(s)
+  const grid = document.getElementById('annotated-grid');
+  grid.innerHTML = '';
+  if (data.filetype === 'image' && data.annotated_url) {
+    const fig = document.createElement('figure');
+    const img = document.createElement('img');
+    img.src = data.annotated_url; img.alt = 'Annotated';
+    fig.appendChild(img); grid.appendChild(fig);
+  } else if (data.filetype === 'pdf' && data.pages) {
+    data.pages.forEach(p => {
+      const fig = document.createElement('figure');
+      const img = document.createElement('img');
+      img.src = p.annotated_url; img.alt = 'Page ' + p.page;
+      const cap = document.createElement('figcaption');
+      cap.textContent = 'Page ' + p.page + ' — ' + (EMOJI[p.emotion] || '') + ' ' + p.emotion;
+      fig.appendChild(img); fig.appendChild(cap); grid.appendChild(fig);
+    });
+  }
+
+  // Emotion bars
+  const barSec = document.getElementById('bar-section');
+  barSec.innerHTML = '';
+  const allEmo = data.all_emotions || (data.pages && data.pages[0] && data.pages[0].all_emotions) || {};
+  if (Object.keys(allEmo).length) {
+    const h4 = document.createElement('h4'); h4.textContent = '📊 Emotion Breakdown'; barSec.appendChild(h4);
+    Object.entries(allEmo).sort((a,b) => b[1]-a[1]).forEach(([lbl, val]) => {
+      const row = document.createElement('div'); row.className = 'bar-row';
+      row.innerHTML = `<span class="bar-lbl">${lbl}</span>
+        <div class="bar-track"><div class="bar-fill" style="background:${COLOR[lbl]||'#7c3aed'}"></div></div>
+        <span class="bar-pct">${val.toFixed(1)}%</span>`;
+      barSec.appendChild(row);
+      setTimeout(() => row.querySelector('.bar-fill').style.width = val + '%', 60);
+    });
+  }
+
+  // Activities
+  const ul = document.getElementById('result-activities');
+  ul.innerHTML = '';
+  (data.activities || []).forEach(a => { const li = document.createElement('li'); li.textContent = a; ul.appendChild(li); });
+
+  // Therapist
+  document.getElementById('result-therapist').style.display = data.therapist ? 'block' : 'none';
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = '⚠️ ' + msg;
+  box.style.display = 'block';
+}
+
+function clearResult() {
+  document.getElementById('result-section').style.display  = 'none';
+  document.getElementById('error-box').style.display       = 'none';
+  document.getElementById('annotated-grid').innerHTML      = '';
+  document.getElementById('bar-section').innerHTML         = '';
+  document.getElementById('result-activities').innerHTML   = '';
+  document.getElementById('result-therapist').style.display = 'none';
+  document.getElementById('result-badge').textContent      = '';
+  document.getElementById('result-msg').textContent        = '';
+}
+
+/* ────────────────────────────────────
+   Upload history
+──────────────────────────────────── */
+async function loadHistory() {
+  try {
+    const r = await fetch('/api/upload_history');
+    const rows = await r.json();
+    if (!rows.length) return;
+
+    const tbody = document.getElementById('history-tbody');
+    tbody.innerHTML = '';
+    rows.forEach(h => {
+      const tr = document.createElement('tr');
+      const fname = h.filename.length > 28 ? h.filename.slice(0,28)+'…' : h.filename;
+      tr.innerHTML = `
+        <td title="${h.filename}">${fname}</td>
+        <td>${h.filetype}</td>
+        <td><span class="emo-pill ep-${h.emotion}">${h.emotion}</span></td>
+        <td style="font-size:.78rem">${(h.created_at||'').slice(0,16)}</td>`;
+      tbody.appendChild(tr);
+    });
+    document.getElementById('history-card').style.display = 'block';
+  } catch(e) {}
+}
+</script>
+
+{% endif %}
+</body>
+</html>

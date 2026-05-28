@@ -1,0 +1,302 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #0a0e1a;
+  color: #e8eaf0;
+  min-height: 100vh;
+}
+
+/* ── AUTH BACKGROUND ── */
+.auth-bg {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0e1a;
+  position: relative;
+  overflow: hidden;
+}
+
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+  animation: floatBlob 8s ease-in-out infinite;
+}
+.blob1 { width: 400px; height: 400px; background: #1D9E75; top: -100px; left: -100px; animation-delay: 0s; }
+.blob2 { width: 350px; height: 350px; background: #378ADD; bottom: -80px; right: -80px; animation-delay: 2s; }
+.blob3 { width: 300px; height: 300px; background: #7F77DD; top: 50%; left: 60%; animation-delay: 4s; }
+
+@keyframes floatBlob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(30px, -30px) scale(1.05); }
+  66% { transform: translate(-20px, 20px) scale(0.95); }
+}
+
+/* ── AUTH CENTER ── */
+.auth-center {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.auth-card {
+  background: rgba(255,255,255,0.05);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  animation: slideUp 0.6s cubic-bezier(0.16,1,0.3,1);
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── LOGO ── */
+.logo-area { text-align: center; margin-bottom: 2rem; }
+
+.logo-ring {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: linear-gradient(135deg, #1D9E75, #0F6E56);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+  box-shadow: 0 0 30px rgba(29,158,117,0.4);
+  animation: pulse-glow 3s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(29,158,117,0.4); }
+  50% { box-shadow: 0 0 40px rgba(29,158,117,0.7); }
+}
+
+.brand {
+  font-family: 'Syne', sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.tagline { font-size: 13px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+.uni { font-size: 11px; color: rgba(255,255,255,0.3); margin-top: 3px; }
+
+/* ── TABS ── */
+.tab-bar {
+  display: flex;
+  background: rgba(255,255,255,0.06);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 1.5rem;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1; text-align: center;
+  padding: 9px;
+  border-radius: 9px;
+  font-size: 14px; font-weight: 500;
+  color: rgba(255,255,255,0.4);
+  text-decoration: none;
+  transition: all 0.25s;
+}
+
+.tab.active {
+  background: #1D9E75;
+  color: #fff;
+  box-shadow: 0 2px 12px rgba(29,158,117,0.4);
+}
+
+.tab:not(.active):hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.05); }
+
+/* ── FORM ── */
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-icon {
+  position: absolute;
+  left: 14px;
+  color: rgba(255,255,255,0.3);
+  display: flex; align-items: center;
+  pointer-events: none;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 13px 14px 13px 42px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  font-size: 14px; font-family: 'DM Sans', sans-serif;
+  color: #fff;
+  outline: none;
+  transition: all 0.25s;
+}
+
+.input-group input::placeholder { color: rgba(255,255,255,0.3); }
+
+.input-group input:focus {
+  border-color: #1D9E75;
+  background: rgba(29,158,117,0.08);
+  box-shadow: 0 0 0 3px rgba(29,158,117,0.15);
+}
+
+.btn-submit {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px;
+  background: linear-gradient(135deg, #1D9E75, #0F6E56);
+  color: #fff; border: none; border-radius: 12px;
+  font-size: 15px; font-weight: 600; font-family: 'DM Sans', sans-serif;
+  cursor: pointer; margin-top: 4px;
+  transition: all 0.25s;
+  box-shadow: 0 4px 20px rgba(29,158,117,0.35);
+}
+
+.btn-submit:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(29,158,117,0.5);
+}
+
+.btn-submit:active { transform: translateY(0); }
+
+/* ── MESSAGES ── */
+.msg {
+  font-size: 13px; padding: 10px 14px;
+  border-radius: 10px; text-align: center;
+}
+
+.error-msg { background: rgba(226,75,74,0.15); border: 1px solid rgba(226,75,74,0.3); color: #f09595; }
+.success-msg { background: rgba(29,158,117,0.15); border: 1px solid rgba(29,158,117,0.3); color: #5DCAA5; }
+
+/* ── DASHBOARD ── */
+.dashboard-wrapper { min-height: 100vh; background: #0a0e1a; }
+
+.topbar {
+  background: rgba(255,255,255,0.04);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding: 14px 2rem;
+  display: flex; align-items: center; justify-content: space-between;
+  backdrop-filter: blur(10px);
+}
+
+.topbar-left { display: flex; align-items: center; gap: 12px; }
+
+.avatar-circle {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, #1D9E75, #0F6E56);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700; color: #fff;
+  box-shadow: 0 0 16px rgba(29,158,117,0.4);
+}
+
+.welcome-text { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: #fff; }
+.sub-text { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 2px; }
+
+.btn-logout {
+  padding: 8px 18px;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 10px; font-size: 13px;
+  color: rgba(255,255,255,0.6); text-decoration: none;
+  transition: all 0.2s;
+}
+.btn-logout:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+/* ── MAIN GRID ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) { .main-grid { grid-template-columns: 1fr; padding: 1rem; } }
+
+/* ── PANEL CARDS ── */
+.panel-card {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 1.25rem;
+  margin-bottom: 1.25rem;
+  transition: border-color 0.3s;
+}
+
+.panel-card:hover { border-color: rgba(255,255,255,0.15); }
+
+.panel-title {
+  font-size: 11px; font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── LIVE DOT ── */
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: rgba(255,255,255,0.2);
+}
+.live-dot.active { background: #E24B4A; animation: blink 1.2s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ── WEBCAM ── */
+.webcam-container {
+  border-radius: 12px; overflow: hidden;
+  background: #000;
+  aspect-ratio: 4/3;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.webcam-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── EMOTION ── */
+.emotion-display { text-align: center; padding: 0.5rem 0; }
+.emotion-emoji {
+  font-size: 56px; display: block; margin-bottom: 10px;
+  animation: floatEmoji 3s ease-in-out infinite;
+}
+@keyframes floatEmoji { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+.emotion-name { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
+.emotion-sub { font-size: 13px; color: rgba(255,255,255,0.4); margin-top: 6px; }
+
+/* ── SUGGESTION ── */
+.suggestion-text { font-size: 14px; color: rgba(255,255,255,0.7); line-height: 1.7; }
+
+/* ── THERAPIST ── */
+.therapist-banner {
+  background: rgba(83,74,183,0.15);
+  border: 1px solid rgba(83,74,183,0.3);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-bottom: 1.25rem;
+  display: flex; gap: 10px; align-items: flex-start;
+}
+.therapist-banner p { font-size: 13px; color: #AFA9EC; line-height: 1.6; }
+.therapist-banner strong { color: #CECBF6; }
+
+/* ── ACTIVITIES ── */
+.activity-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.activity-chip {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.5;
+  transition: all 0.2s;
+}
+.activity-chip:hover { background: rgba(29,158,117,0.1); border-color: rgba(29,158,117,0.3); }
